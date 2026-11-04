@@ -27,12 +27,8 @@ jobs:
     name: ${{ matrix.os }}, preset=${{ matrix.preset }}
 
     steps:
-      - uses: actions/checkout@v6
-        with:
-          submodules: true
-
       - if: ${{ matrix.os == 'fedora-latest' }}
-        run: sudo dnf install -y cmake ninja-build swift-lang
+        run: sudo dnf install -y cmake ninja-build swift-lang git-lfs
       - if: ${{ matrix.os == 'macos-latest' }}
         run: brew install ninja
       # - if: ${{ matrix.os == 'windows-latest' }}
@@ -40,6 +36,20 @@ jobs:
       - if: ${{ matrix.os == 'windows-latest' }}
         run: |
           choco install ninja
+
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          submodules: true
+
+      # https://codeberg.org/forgejo/forgejo/issues/7264
+      # https://github.com/git-lfs/git-lfs/issues/4031
+      # https://github.com/actions/checkout/issues/1830
+      # https://github.com/git-lfs/git-lfs/pull/6204
+      - name: Pull from LFS
+        run: |
+          git lfs install
+          git submodule foreach git lfs pull
 
       - name: Setup rustup
         run: |

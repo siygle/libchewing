@@ -4,6 +4,7 @@ in
 
 pkgs.mkShell {
   packages = with pkgs; [
+    git-lfs
     cargo
     rustc
     rustfmt

@@ -40,13 +40,6 @@ option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 option(USE_SYSTEM_CHEWING_CLI "Use system-installed chewing-cli to build dictionary" OFF)
 option(BUILD_DOC "Build documentation" ON)
 option(BUILD_DATA "Build chewing dictionaries" ON)
-cmake_dependent_option(
-    USE_BUNDLED_STATIC_LM
-    "Use bundled static_lm.arpa file"
-    ON
-    "EXISTS ${CMAKE_SOURCE_DIR}/data/dict/chewing_v4/static_lm.arpa"
-    OFF
-)
 
 if(CMAKE_C_COMPILER_ID MATCHES GNU|Clang)
     option(ENABLE_GCOV "Coverage support" OFF)
