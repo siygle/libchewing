@@ -179,7 +179,7 @@ impl UserDict {
             let word_entries = lock.records.entry(syl_vec).or_default();
             if let Some(pos) = word_entries.iter().position(|e| e.wid == wid) {
                 word_entries[pos].boost =
-                    (word_entries[pos].boost + 100).clamp(Self::MIN, Self::MAX);
+                    (word_entries[pos].boost + 10).clamp(Self::MIN, Self::MAX);
             } else {
                 word_entries.push(UserDictEntry { wid, boost: 10 });
             }
