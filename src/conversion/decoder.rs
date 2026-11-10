@@ -140,7 +140,12 @@ impl Decoder {
         let unigram_weight = (1.0 - self.lambda).log10();
         let mixed = log10_sum_exp(bigram_weight + p_bi, unigram_weight + p_uni);
         let cost = -mixed;
-        let manual_gain = user_pref.unwrap_or(0) as f64 / 100.0;
+        let raw_user_pref = user_pref.unwrap_or(0);
+        let manual_gain = if raw_user_pref >= 0 {
+            raw_user_pref.min(10) as f64 / 100.0
+        } else {
+            raw_user_pref as f64 / 100.0
+        };
         cost - MANUAL_BOOST_FACTOR * manual_gain
     }
 }
