@@ -11,6 +11,7 @@ use std::{
     sync::{Arc, RwLock},
 };
 
+use bstr::ByteSlice;
 use log::error;
 use scoped_error::{expect_error, impl_context_error};
 
@@ -293,6 +294,12 @@ impl UserDict {
                     .flat_map(|(_, entries)| {
                         entries
                             .iter()
+                            // FIXME generalize and share fuzzy lookup logic
+                            .filter(|e| {
+                                lock.string_table.get_text(e.wid).is_some_and(|s| {
+                                    s.as_bytes().graphemes().count() == syllables.len()
+                                })
+                            })
                             .filter(|e| e.boost != Self::MIN)
                             .map(|e| (e.wid, e.boost))
                     })
@@ -322,3 +329,41 @@ fn display_syllables(syllables: &[Syllable]) -> impl Display {
 }
 
 impl_context_error!(pub UserDictError);
+
+#[cfg(test)]
+mod tests {
+    use super::UserDict;
+    use crate::dictionary::{LookupStrategy, StringTable};
+    use crate::syl;
+    use crate::zhuyin::Bopomofo::*;
+
+    #[test]
+    fn fuzzy_search_grapheme_count() {
+        let st = StringTable::new();
+        let dict = UserDict::new(st.clone());
+
+        dict.insert(&[syl![C, E, TONE4], syl![SH, TONE4]], "測試");
+        assert_eq!(
+            dict.lookup(
+                &[syl![C, E, TONE4], syl![SH, TONE4]],
+                LookupStrategy::Standard
+            ),
+            vec![(st.intern("測試"), 0)],
+        );
+        assert_eq!(
+            dict.lookup(
+                &[syl![C, E, TONE4], syl![SH, TONE4]],
+                LookupStrategy::FuzzyPartialPrefix
+            ),
+            vec![(st.intern("測試"), 0)],
+        );
+        // assert_eq!(
+        //     dict.lookup(&[syl![C, E], syl![SH]], LookupStrategy::FuzzyPartialPrefix),
+        //     vec![(st.intern("測試"), 0)],
+        // );
+        assert_eq!(
+            dict.lookup(&[syl![C, E, TONE4]], LookupStrategy::FuzzyPartialPrefix),
+            vec![],
+        );
+    }
+}
