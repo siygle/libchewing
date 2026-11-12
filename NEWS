@@ -42,6 +42,7 @@ What's New in libchewing 0.14.0 (unreleased)
     can contain unequal length bopomofo and word entries.
   - editor: simple conversion mode now auto commit first word for any
     non-selecting key.
+  - editor: add initial support for rule based re-ranking.
 
 
 What's New in libchewing 0.13.1 (July 15, 2026)

@@ -5,7 +5,9 @@ use std::{
 
 use anyhow::{Context, Result};
 use chewing::{
-    conversion::{ChewingEngine, Composition, ConversionEngine, Decoder, LatticeBuilder, Symbol},
+    conversion::{
+        ChewingEngine, Composition, ConversionEngine, Decoder, LatticeBuilder, RuleFilter, Symbol,
+    },
     dictionary::{CompositeDict, LookupStrategy, StringTable},
     lm::{LoadMode, StaticDict, StaticLm},
     path::SearchPath,
@@ -54,10 +56,13 @@ pub(crate) fn eval(search_path: &str, model_bin: &str, alpha: f64, verbose: bool
         lambda: alpha,
     };
 
+    let rule_filter = RuleFilter::new(string_table.clone());
+
     let engine = ChewingEngine {
         word_lattice_builder: lattice_builder,
         decoder,
         string_table,
+        rule_filter,
     };
 
     let n_threads = thread::available_parallelism()?.get();

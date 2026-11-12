@@ -1700,6 +1700,32 @@ void test_BellCondition()
     chewing_delete(ctx);
 }
 
+void test_conversion_rules()
+{
+    ChewingContext *ctx;
+
+    ctx = chewing_new();
+    start_testcase(ctx);
+
+    type_keystroke_by_string(ctx, "5j/ vul42j/ xj4j32j04xu.4g6u vu;4j3sj/4g6fu cl4ru.3x.6");
+    ok_preedit_buffer(ctx, "忠孝東路五段六十一巷五弄十七號九樓");
+    chewing_clean_preedit_buf(ctx);
+
+    type_keystroke_by_string(ctx, "m,42l4m,42u3m,4fm/6");
+    ok_preedit_buffer(ctx, "越到月底越窮");
+    chewing_clean_preedit_buf(ctx);
+
+    type_keystroke_by_string(ctx, "2u4u 2u4-42u4n0 ");
+    ok_preedit_buffer(ctx, "第一第二第三");
+    chewing_clean_preedit_buf(ctx);
+
+    type_keystroke_by_string(ctx, "u m,4-4m,4n0 m,4");
+    ok_preedit_buffer(ctx, "一月二月三月");
+    chewing_clean_preedit_buf(ctx);
+
+    chewing_delete(ctx);
+}
+
 void test_get_phoneSeq()
 {
     static const struct {
@@ -2101,7 +2127,7 @@ void test_KB_HSU_example()
     chewing_clean_preedit_buf(ctx);
 
     type_keystroke_by_string(ctx, "jxl cewjdxl lxjxfdxmjleojcde cekjxfnxljcdve hwjjeoflod");
-    ok_preedit_buffer(ctx, "忠孝東路五段六十一項侮弄十七號九樓");
+    ok_preedit_buffer(ctx, "忠孝東路五段六十一巷五弄十七號九樓");
     chewing_clean_preedit_buf(ctx);
 
     type_keystroke_by_string(ctx, "tidxm dgsrndgxl hnfgxaj");
@@ -2840,6 +2866,7 @@ int main(int argc, char *argv[])
     test_Acknowledge();
     test_BellInvalidSpelling();
     // test_BellCondition();
+    test_conversion_rules();
 
     test_get_phoneSeq();
     test_bopomofo_buffer();

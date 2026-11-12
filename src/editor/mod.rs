@@ -25,8 +25,8 @@ use self::{
 };
 use crate::{
     conversion::{
-        ChewingEngine, ConversionEngine, Decoder, Interval, LatticeBuilder, Outcome, Selection,
-        SimpleEngine, Symbol, full_width_symbol_input, special_symbol_input,
+        ChewingEngine, ConversionEngine, Decoder, Interval, LatticeBuilder, Outcome, RuleFilter,
+        Selection, SimpleEngine, Symbol, full_width_symbol_input, special_symbol_input,
     },
     dictionary::{CompositeDict, LookupStrategy, StringTable},
     editor::{action::Action, keybind::Keybinding},
@@ -311,10 +311,13 @@ impl Editor {
                 lambda: Decoder::LAMBDA,
             };
 
+            let mut rule_filter = RuleFilter::new(string_table.clone());
+            rule_filter.enable();
             let conversion_engine = Box::new(ChewingEngine {
                 word_lattice_builder,
                 decoder: decoder.clone(),
                 string_table: string_table.clone(),
+                rule_filter,
             });
 
             let abbrev = match sp.find_file("swkb.dat") {
@@ -456,6 +459,8 @@ impl Editor {
             self.cancel_entering_syllable();
         }
         if self.shared.options.conversion_engine != old.conversion_engine {
+            let mut rule_filter = RuleFilter::new(self.shared.string_table.clone());
+            rule_filter.enable();
             self.shared.conv = match self.shared.options.conversion_engine {
                 ConversionEngineKind::SimpleEngine => Box::new(SimpleEngine {
                     string_table: self.shared.string_table.clone(),
@@ -468,6 +473,7 @@ impl Editor {
                     },
                     decoder: self.shared.decoder.clone(),
                     string_table: self.shared.string_table.clone(),
+                    rule_filter,
                 }),
                 ConversionEngineKind::FuzzyChewingEngine => Box::new(ChewingEngine {
                     word_lattice_builder: LatticeBuilder {
@@ -476,6 +482,7 @@ impl Editor {
                     },
                     decoder: self.shared.decoder.clone(),
                     string_table: self.shared.string_table.clone(),
+                    rule_filter,
                 }),
             }
         }
@@ -2247,10 +2254,15 @@ impl EditorBuilder {
             hist: self.history_dict.clone(),
             lambda: Decoder::LAMBDA,
         };
+
+        let mut rule_filter = RuleFilter::new(self.string_table.clone());
+        rule_filter.enable();
+
         let conversion_engine = Box::new(ChewingEngine {
             word_lattice_builder,
             decoder: decoder.clone(),
             string_table: self.string_table.clone(),
+            rule_filter,
         });
 
         Editor::new(

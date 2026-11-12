@@ -5,7 +5,7 @@ use log::{Level, debug, log_enabled};
 
 use super::{Composition, ConversionEngine, Gap, Interval, Outcome};
 use crate::{
-    conversion::{Decoder, LatticeBuilder},
+    conversion::{Decoder, LatticeBuilder, rule::RuleFilter},
     dictionary::StringTable,
     model::{Candidate, Span},
 };
@@ -15,18 +15,22 @@ use crate::{
 pub struct ChewingEngine {
     pub word_lattice_builder: LatticeBuilder,
     pub decoder: Decoder,
+    pub rule_filter: RuleFilter,
     pub string_table: StringTable,
 }
 
 impl ChewingEngine {
-    const MAX_OUT: u8 = 10;
+    const MAX_RECALL: u8 = 100;
+    const MAX_OUT: usize = 10;
 
     pub(crate) fn convert<'a>(&'a self, com: &'a Composition) -> Vec<Outcome> {
         let lattice = self.word_lattice_builder.build_lattice(com);
-        let hypothesis = self.decoder.decoden(lattice, Self::MAX_OUT);
+        let first_pass = self.decoder.decoden(lattice, Self::MAX_RECALL);
+        let hypothesis = self.rule_filter.rerank(first_pass);
 
         hypothesis
             .into_iter()
+            .take(Self::MAX_OUT)
             .map(|hyp| {
                 let cost = hyp.cost;
                 let mut cursor = 0;
@@ -114,6 +118,7 @@ mod tests {
     use crate::{
         conversion::{
             ChewingEngine, Composition, Decoder, Gap, Interval, LatticeBuilder, Selection, Symbol,
+            rule::RuleFilter,
         },
         dictionary::{CompositeDict, LookupStrategy, StringTable},
         lm::{StaticDict, StaticLm},
@@ -167,6 +172,7 @@ mod tests {
             dict,
             lookup_strategy: LookupStrategy::Standard,
         };
+        let rule_filter = RuleFilter::new(string_table.clone());
         let engine = ChewingEngine {
             word_lattice_builder,
             decoder: Decoder {
@@ -175,6 +181,7 @@ mod tests {
                 lambda: Decoder::LAMBDA,
             },
             string_table,
+            rule_filter,
         };
         let mut composition = Composition::new();
         for sym in [
@@ -223,6 +230,7 @@ mod tests {
             dict,
             lookup_strategy: LookupStrategy::Standard,
         };
+        let rule_filter = RuleFilter::new(string_table.clone());
         let engine = ChewingEngine {
             word_lattice_builder,
             decoder: Decoder {
@@ -231,6 +239,7 @@ mod tests {
                 lambda: Decoder::LAMBDA,
             },
             string_table,
+            rule_filter,
         };
         let mut composition = Composition::new();
         for sym in [
@@ -295,6 +304,7 @@ mod tests {
             dict,
             lookup_strategy: LookupStrategy::Standard,
         };
+        let rule_filter = RuleFilter::new(string_table.clone());
         let engine = ChewingEngine {
             word_lattice_builder,
             decoder: Decoder {
@@ -303,6 +313,7 @@ mod tests {
                 lambda: Decoder::LAMBDA,
             },
             string_table: string_table.clone(),
+            rule_filter,
         };
         let mut composition = Composition::new();
         for sym in [
@@ -357,6 +368,7 @@ mod tests {
             dict,
             lookup_strategy: LookupStrategy::Standard,
         };
+        let rule_filter = RuleFilter::new(string_table.clone());
         let engine = ChewingEngine {
             word_lattice_builder,
             decoder: Decoder {
@@ -365,6 +377,7 @@ mod tests {
                 lambda: Decoder::LAMBDA,
             },
             string_table: string_table.clone(),
+            rule_filter,
         };
         let mut composition = Composition::new();
         for sym in [
@@ -400,6 +413,7 @@ mod tests {
             dict,
             lookup_strategy: LookupStrategy::Standard,
         };
+        let rule_filter = RuleFilter::new(string_table.clone());
         let engine = ChewingEngine {
             word_lattice_builder,
             decoder: Decoder {
@@ -408,6 +422,7 @@ mod tests {
                 lambda: Decoder::LAMBDA,
             },
             string_table: string_table.clone(),
+            rule_filter,
         };
         let mut composition = Composition::new();
         for sym in [
@@ -459,6 +474,7 @@ mod tests {
             dict,
             lookup_strategy: LookupStrategy::Standard,
         };
+        let rule_filter = RuleFilter::new(string_table.clone());
         let engine = ChewingEngine {
             word_lattice_builder,
             decoder: Decoder {
@@ -467,6 +483,7 @@ mod tests {
                 lambda: Decoder::LAMBDA,
             },
             string_table: string_table.clone(),
+            rule_filter,
         };
         let mut composition = Composition::new();
         for sym in [
@@ -549,6 +566,7 @@ mod tests {
             dict,
             lookup_strategy: LookupStrategy::Standard,
         };
+        let rule_filter = RuleFilter::new(string_table.clone());
         let engine = ChewingEngine {
             word_lattice_builder,
             decoder: Decoder {
@@ -557,6 +575,7 @@ mod tests {
                 lambda: Decoder::LAMBDA,
             },
             string_table: string_table.clone(),
+            rule_filter,
         };
         let mut composition = Composition::new();
         for _ in 0..80 {
